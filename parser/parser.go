@@ -3,6 +3,16 @@ package parser
 type MagicParser interface {
 }
 
-func New() *MagicParser {
+type YAMLFileParser struct {
+	path string
+	root *YAMLNode
+}
+
+func NewYAMLFileParser() *MagicParser {
 	return nil
+}
+
+func (yamlFileParser *YAMLFileParser) Parse() *YAMLNode {
+	// TODO
+	return yamlFileParser.root
 }
