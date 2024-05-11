@@ -22,10 +22,16 @@ go get github.com/unsubble/goml
 After installing GoML, you can import it into your Go files:
 
 ```
-import "github.com/user/goml"
+import "github.com/unsubble/goml"
 ```
 
-Then, you can use the `goml.Parse()` function to parse YAML documents within your Go program.
+Then, you can use: 
+
+```
+  parser := parser.NewYAMLFileParser("FILE_PATH")
+  parser.Parse()
+```
+To parse YAML documents within your Go program.
 
 ## License
 
