@@ -22,7 +22,7 @@ go get github.com/unsubble/goml
 After installing GoML, you can import it into your Go files:
 
 ```
-import "github.com/unsubble/goml"
+import "github.com/unsubble/goml/parser"
 ```
 
 Then, you can use: 
