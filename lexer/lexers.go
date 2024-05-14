@@ -7,65 +7,101 @@ import (
 )
 
 type Token struct {
+	Value      string
 	TokenValue TokenType
 	Next       *Token
-	Value      string
-}
-
-type helper struct {
-	isStr      bool
-	isInnerKey bool
 }
 
 type YAMLLexer struct {
 	src       string
-	rootToken *Token
+	RootToken *Token
+	lastToken *Token
+	lastChar  rune
+	isStr     bool
 }
 
 func NewLexer() *YAMLLexer {
-	return &YAMLLexer{rootToken: &Token{}}
+	return &YAMLLexer{RootToken: &Token{TokenValue: TokenEOF, Value: "[ROOT]"}}
 }
 
 func (yamlLexer *YAMLLexer) SetString(str string) {
 	yamlLexer.src = str
 }
 
-func (yamlLexer *YAMLLexer) Lex() error {
-	root := Token{}
-	curr := &root
-
-	h := helper{isStr: false, isInnerKey: false}
+func (l *YAMLLexer) Lex() error {
+	if l.lastToken == nil {
+		l.lastToken = l.RootToken
+	}
 
 	builder := &strings.Builder{}
 
-	for _ /* TODO: replace it i(index) */, char := range yamlLexer.src {
-		if char == '"' || char == '\'' {
-			h.isStr = !h.isStr
-			curr = emit(TokenQuote, "\"", curr)
-		} else if !h.isStr && char == ':' {
-			curr = emit(TokenKey, builder.String(), curr)
+	for _, char := range l.src {
+		l.updateStrMode(char)
+		if l.shouldEmitToken(char) {
+			if builder.Len() > 0 {
+				l.lastToken = emitToken(l.lastToken, builder.String())
+			}
+			l.lastToken = emitToken(l.lastToken, string(char))
 			builder.Reset()
-		} else if !h.isStr && (char == '\n') {
-			curr = emit(TokenValue, builder.String(), curr)
+		} else if char == '\n' && !l.isStr && builder.Len() > 0 {
+			l.lastToken = emitToken(l.lastToken, builder.String())
 			builder.Reset()
-		} else if !unicode.IsSpace(char) || h.isStr {
+		} else if !unicode.IsSpace(char) || l.isStr {
 			builder.WriteRune(char)
 		}
 	}
 
-	curr.Next = &Token{TokenValue: TokenEOF, Value: "[EOF]"}
+	l.lastToken = emitToken(l.lastToken, builder.String())
 
-	*yamlLexer.rootToken = *root.Next
+	tokenizeAndEmit(l.lastToken, TokenEOF, "[EOF]")
+
 	return nil
 }
 
-func emit(tokenVal TokenType, val string, curr *Token) *Token {
+func emitToken(curr *Token, val string) *Token {
+	switch val {
+	case ":":
+		return tokenizeAndEmit(curr, TokenColon, "[COLON]")
+	case "-":
+		return tokenizeAndEmit(curr, TokenDash, "[DASH]")
+	case " ", "\r":
+		return tokenizeAndEmit(curr, TokenSpace, "[SPACE]")
+	case "\t":
+		return tokenizeAndEmitSpace(curr, 4)
+	default:
+		return tokenizeAndEmit(curr, TokenIdentifier, val)
+	}
+}
+
+func tokenizeAndEmit(curr *Token, tokenVal TokenType, val string) *Token {
 	curr.Next = &Token{TokenValue: tokenVal, Value: val}
 	return curr.Next
 }
 
+func tokenizeAndEmitSpace(curr *Token, count int) *Token {
+	for i := 0; i < count; i++ {
+		curr = tokenizeAndEmit(curr, TokenSpace, "[SPACE]")
+	}
+	return curr
+}
+
+func (l *YAMLLexer) shouldEmitToken(char rune) bool {
+	return (char == ':' || char == '-' || char == '\t' || char == '\r' || char == ' ') && !l.isStr
+}
+
+func (l *YAMLLexer) updateStrMode(char rune) {
+	if l.lastChar == 0 && (char == '"' || char == '\'') {
+		l.lastChar = char
+		l.isStr = true
+	} else if l.lastChar == char {
+		l.isStr = false
+		l.lastChar = 0
+	}
+}
+
+// TODO: remove this later
 func (yamlLexer *YAMLLexer) Print() {
-	curr := yamlLexer.rootToken
+	curr := yamlLexer.RootToken
 	for curr != nil {
 		fmt.Print(curr.Value, "-> ")
 		curr = curr.Next

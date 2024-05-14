@@ -4,10 +4,8 @@ type TokenType int
 
 const (
 	TokenColon TokenType = iota
-	TokenQuote
 	TokenDash
 	TokenSpace
-	TokenValue
-	TokenKey
+	TokenIdentifier
 	TokenEOF
 )
