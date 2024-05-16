@@ -14,7 +14,7 @@ func TestMain(m *testing.M) {
 
 func Test_ExpectedTokenShouldEqualToActualToken(t *testing.T) {
 	l := lexer.NewLexer()
-	l.SetString("\"test 1\":\n\ttset")
+	l.Src = "\"test 1\":\n\ttset"
 	l.Lex()
 	l.Print()
 }

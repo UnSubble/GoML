@@ -1,2 +1,19 @@
-test:
-  tset
+person:
+  name: 'John Doe'
+  age: 30
+  address:
+    city: 'New York'
+    street: '123 Main St'
+person2:
+  name: 'Jane Doe'
+  age: 25
+  address:
+    city: 'Los Angeles'
+    street: '456 Elm St'
+person3:
+  name: 'Alice Doe'
+  age: 35
+  address:
+    city: 'Chicago'
+    street: '789 Oak St'
+  salary: 100000

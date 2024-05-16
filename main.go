@@ -5,6 +5,10 @@ import (
 )
 
 func main() {
-	parser := parser.NewYAMLFileParser("test.yaml")
-	parser.ParseNodes()
+	p := parser.NewYAMLFileParser("test.yaml")
+	node, err := p.ParseFile()
+	if err != nil {
+		panic(err)
+	}
+	parser.Print(node, "")
 }

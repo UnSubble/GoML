@@ -13,7 +13,7 @@ type Token struct {
 }
 
 type YAMLLexer struct {
-	src       string
+	Src       string
 	RootToken *Token
 	lastToken *Token
 	lastChar  rune
@@ -24,10 +24,6 @@ func NewLexer() *YAMLLexer {
 	return &YAMLLexer{RootToken: &Token{TokenValue: TokenEOF, Value: "[ROOT]"}}
 }
 
-func (yamlLexer *YAMLLexer) SetString(str string) {
-	yamlLexer.src = str
-}
-
 func (l *YAMLLexer) Lex() error {
 	if l.lastToken == nil {
 		l.lastToken = l.RootToken
@@ -35,7 +31,7 @@ func (l *YAMLLexer) Lex() error {
 
 	builder := &strings.Builder{}
 
-	for _, char := range l.src {
+	for _, char := range l.Src {
 		l.updateStrMode(char)
 		if l.shouldEmitToken(char) {
 			if builder.Len() > 0 {
@@ -51,7 +47,9 @@ func (l *YAMLLexer) Lex() error {
 		}
 	}
 
-	l.lastToken = emitToken(l.lastToken, builder.String())
+	if builder.Len() > 0 {
+		l.lastToken = emitToken(l.lastToken, builder.String())
+	}
 
 	tokenizeAndEmit(l.lastToken, TokenEOF, "[EOF]")
 
@@ -103,7 +101,7 @@ func (l *YAMLLexer) updateStrMode(char rune) {
 func (yamlLexer *YAMLLexer) Print() {
 	curr := yamlLexer.RootToken
 	for curr != nil {
-		fmt.Print(curr.Value, "-> ")
+		fmt.Print(curr.Value, "(", curr.TokenValue, ")", "-> ")
 		curr = curr.Next
 	}
 	fmt.Println("<END>")
