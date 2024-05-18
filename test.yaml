@@ -10,10 +10,8 @@ person2:
   address:
     city: 'Los Angeles'
     street: '456 Elm St'
-person3:
-  name: 'Alice Doe'
-  age: 35
-  address:
-    city: 'Chicago'
-    street: '789 Oak St'
-  salary: 100000
+  skills:
+    - 'Python'
+    - 'Java'
+    - 'C++'
+    - 'JavaScript'

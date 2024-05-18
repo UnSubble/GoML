@@ -1,7 +1,9 @@
 package parser
 
-type parserError string
+type ParserError struct {
+	message string
+}
 
-const (
-	nilValue parserError = "the node does not have any values"
-)
+func (e *ParserError) Error() string {
+	return e.message
+}

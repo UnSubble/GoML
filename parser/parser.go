@@ -21,23 +21,20 @@ func NewYAMLFileParser(path string) MagicParser {
 	return &YAMLFileParser{path: path}
 }
 
-func (yamlFileParser *YAMLFileParser) ParseFile() (*YAMLNode, error) {
-	file, err := os.Open(yamlFileParser.path)
-
+func (p *YAMLFileParser) ParseFile() (*YAMLNode, error) {
+	file, err := os.Open(p.path)
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
 	l := lexer.NewLexer()
-
-	defer file.Close()
 
 	buffer := make([]byte, 1024)
 	read := 1
 
 	for read != 0 {
 		read, err = file.Read(buffer)
-
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
@@ -49,40 +46,40 @@ func (yamlFileParser *YAMLFileParser) ParseFile() (*YAMLNode, error) {
 
 	l.Print()
 
-	yamlFileParser.root = ParseTokens(l.RootToken)
+	p.root = ParseTokens(l.RootToken)
 
-	return yamlFileParser.root, nil
+	return p.root, nil
 }
 
 func ParseTokens(token *lexer.Token) *YAMLNode {
 	entryMap := make(map[int]*YAMLNode)
 
 	var spaceCount int
-	var last *YAMLNode = nil
+	var last *YAMLNode
 
 	root := &YAMLNode{Key: "[ROOT]", entryCount: -1}
 	entryMap[spaceCount] = root
 
 	for token != nil {
-		switch token.TokenValue {
+		switch token.TokenType {
 		case lexer.TokenSpace:
 			spaceCount++
 		case lexer.TokenIdentifier:
 			value := token.Value
-			if token.Next.TokenValue == lexer.TokenIdentifier {
+			if token.Next.TokenType == lexer.TokenIdentifier {
 				spaceCount = 0
 			}
-			for token.Next.TokenValue == lexer.TokenIdentifier {
+			for token.Next.TokenType == lexer.TokenIdentifier {
 				token = token.Next
 				if last.Value != nil {
-					*last.Value = *last.Value + " " + value
+					*last.Value += " " + value
 				} else {
 					last.Value = &value
 				}
 				value = token.Value
 			}
 			node := &YAMLNode{Key: value, entryCount: spaceCount}
-			if token.Next.TokenValue == lexer.TokenColon {
+			if token.Next.TokenType == lexer.TokenColon {
 				handleNode(entryMap, spaceCount, node, &last)
 			} else {
 				if last.Value != nil {
@@ -103,9 +100,7 @@ func ParseTokens(token *lexer.Token) *YAMLNode {
 func handleNode(entryMap map[int]*YAMLNode, spaceCount int, node *YAMLNode, last **YAMLNode) {
 	if spaceCount <= getParent(entryMap, spaceCount).entryCount {
 		getParent(entryMap, spaceCount).Next = node
-		// if spaceCount == 0 {
 		clear(entryMap)
-		// }
 	} else if entryMap[spaceCount] != nil {
 		entryMap[spaceCount].Next = node
 	} else {
@@ -130,6 +125,7 @@ func clear(entryMap map[int]*YAMLNode) {
 	}
 }
 
+// TODO: remove this function
 func Print(yamlNode *YAMLNode, space string) {
 	root := yamlNode
 

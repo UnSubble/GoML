@@ -7,9 +7,9 @@ import (
 )
 
 type Token struct {
-	Value      string
-	TokenValue TokenType
-	Next       *Token
+	Value     string
+	TokenType TokenType
+	Next      *Token
 }
 
 type YAMLLexer struct {
@@ -21,7 +21,7 @@ type YAMLLexer struct {
 }
 
 func NewLexer() *YAMLLexer {
-	return &YAMLLexer{RootToken: &Token{TokenValue: TokenEOF, Value: "[ROOT]"}}
+	return &YAMLLexer{RootToken: &Token{TokenType: TokenEOF, Value: "[ROOT]"}}
 }
 
 func (l *YAMLLexer) Lex() error {
@@ -72,7 +72,7 @@ func emitToken(curr *Token, val string) *Token {
 }
 
 func tokenizeAndEmit(curr *Token, tokenVal TokenType, val string) *Token {
-	curr.Next = &Token{TokenValue: tokenVal, Value: val}
+	curr.Next = &Token{TokenType: tokenVal, Value: val}
 	return curr.Next
 }
 
@@ -97,11 +97,11 @@ func (l *YAMLLexer) updateStrMode(char rune) {
 	}
 }
 
-// TODO: remove this later
+// TODO: remove this function
 func (yamlLexer *YAMLLexer) Print() {
 	curr := yamlLexer.RootToken
 	for curr != nil {
-		fmt.Print(curr.Value, "(", curr.TokenValue, ")", "-> ")
+		fmt.Print(curr.Value, "(", curr.TokenType, ")", "-> ")
 		curr = curr.Next
 	}
 	fmt.Println("<END>")
